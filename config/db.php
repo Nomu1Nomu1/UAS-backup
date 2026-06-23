@@ -5,10 +5,10 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 define('BASE_URL', '');        
-define('DB_HOST', 'sql206.infinityfree.com'); 
-define('DB_USER', 'if0_42229422');           
-define('DB_PASS', 'YqFhO98kWRu0'); 
-define('DB_NAME', 'if0_42229422_uas');
+define('DB_HOST', 'localhost'); 
+define('DB_USER', 'root');           
+define('DB_PASS', ''); 
+define('DB_NAME', 'inventory');
 
 function getDB(): mysqli
 {

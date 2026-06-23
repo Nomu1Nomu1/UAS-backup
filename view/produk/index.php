@@ -142,7 +142,7 @@ unset($_SESSION['flash']);
                             Rp <?= number_format($p['harga_jual'], 0, ',', '.') ?>
                         </td>
 
-                        <td><?= htmlspecialchars($p['nama_distributor']) ?></td>
+                        <td><?= htmlspecialchars($p['nama_distributor'] ?? '-' ) ?></td>
 
                         <td class="text-center pe-3">
                             <a href="/?page=product&action=show&id=<?= $p['id'] ?>"

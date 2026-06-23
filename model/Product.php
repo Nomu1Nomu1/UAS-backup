@@ -15,7 +15,7 @@ class Product
         $sql    = "SELECT p.*, k.nama_kategori, d.nama_distributor
                    FROM product p
                    JOIN kategori_product k ON p.kategori_id    = k.id
-                   JOIN distributors     d ON p.distributor_id = d.id
+                   LEFT JOIN distributors     d ON p.distributor_id = d.id
                    WHERE 1=1";
         $params = [];
         $types  = '';
@@ -52,7 +52,7 @@ class Product
             "SELECT p.*, k.nama_kategori, d.nama_distributor
              FROM product p
              JOIN kategori_product k ON p.kategori_id    = k.id
-             JOIN distributors     d ON p.distributor_id = d.id
+             LEFT JOIN distributors     d ON p.distributor_id = d.id
              WHERE p.id = ?"
         );
         $stmt->bind_param('i', $id);
@@ -77,7 +77,7 @@ class Product
                     p.satuan, p.foto, k.nama_kategori, d.nama_distributor, d.no_hp AS dist_no_hp
              FROM product p
              JOIN kategori_product k ON p.kategori_id    = k.id
-             JOIN distributors     d ON p.distributor_id = d.id
+             LEFT JOIN distributors     d ON p.distributor_id = d.id
              WHERE p.stock <= p.stock_min
              ORDER BY p.stock ASC"
         )->fetch_all(MYSQLI_ASSOC);

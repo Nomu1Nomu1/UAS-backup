@@ -31,16 +31,17 @@
 
                 <select name="distributor_id"
                         class="form-select"
-                        style="border-radius:12px;"
-                        required>
+                        style="border-radius:12px;">
 
-                    <option value="">Pilih Distributor</option>
+                    <option value="" disabled selected>Pilih Distributor</option>
+                    <option value="">Tanpa Distributor</option>
 
                     <?php foreach ($distributors as $d): ?>
                         <option value="<?= $d['id'] ?>">
                             <?= htmlspecialchars($d['nama_distributor']) ?>
                         </option>
                     <?php endforeach; ?>
+
 
                 </select>
             </div>

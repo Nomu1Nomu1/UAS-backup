@@ -28,13 +28,13 @@
 
         <div class="row g-3">
 
-            <div class="col-md-4">
+            <!-- <div class="col-md-4">
                 <label class="form-label fw-semibold small">
-                    Kode Barang <span class="text-danger">*</span>
+                    Kode Barang 
                 </label>
                 <input type="text" name="kode_barang" class="form-control" style="border-radius:12px;"
-                       value="<?= htmlspecialchars($_POST['kode_barang'] ?? '') ?>" required>
-            </div>
+                       value="Otomatis" readonly>
+            </div> -->
 
             <div class="col-md-8">
                 <label class="form-label fw-semibold small">
@@ -49,7 +49,7 @@
                     Kategori <span class="text-danger">*</span>
                 </label>
                 <select name="kategori_id" class="form-select" style="border-radius:12px;" required>
-                    <option value="">Pilih Kategori</option>
+                    <option value="" disabled selected>Pilih Kategori</option>
                     <?php foreach ($kategoris as $k): ?>
                         <option value="<?= $k['id'] ?>">
                             <?= htmlspecialchars($k['nama_kategori']) ?>
@@ -62,8 +62,9 @@
                 <label class="form-label fw-semibold small">
                     Distributor <span class="text-danger">*</span>
                 </label>
-                <select name="distributor_id" class="form-select" style="border-radius:12px;" required>
-                    <option value="">Pilih Distributor</option>
+                <select name="distributor_id" class="form-select" style="border-radius:12px;">
+                    <option value="" disabled selected>Pilih Distributor</option>
+                    <option value="0">Tanpa Distributor</option>
                     <?php foreach ($distribs as $d): ?>
                         <option value="<?= $d['id'] ?>">
                             <?= htmlspecialchars($d['nama_distributor']) ?>

@@ -59,7 +59,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label text-secondary small">Distributor</label>
-                    <div class="fw-semibold"><?= htmlspecialchars($product['nama_distributor']) ?></div>
+                    <div class="fw-semibold"><?= htmlspecialchars($product['nama_distributor'] ?? '-') ?></div>
                 </div>
 
                 <div class="col-md-3">

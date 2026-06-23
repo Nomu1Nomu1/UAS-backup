@@ -5,32 +5,33 @@ class ProductController
 {
     public function index(): void
     {
-        if (!is_logged_in()) redirect('auth/login');
+        if (!is_logged_in())
+            redirect('auth/login');
 
-        $db     = getDB();
+        $db = getDB();
         $search = trim($_GET['search'] ?? '');
-        $katId  = (int) ($_GET['kategori_id'] ?? 0);
+        $katId = (int) ($_GET['kategori_id'] ?? 0);
 
-        $sql    = "SELECT p.*, k.nama_kategori, d.nama_distributor
+        $sql = "SELECT p.*, k.nama_kategori, d.nama_distributor
                    FROM product p
                    JOIN kategori_product k ON p.kategori_id    = k.id
-                   JOIN distributors     d ON p.distributor_id = d.id
+                   LEFT JOIN distributors d ON p.distributor_id = d.id
                    WHERE 1=1";
         $params = [];
-        $types  = '';
+        $types = '';
 
         if ($search !== '') {
-            $like     = "%{$search}%";
-            $sql     .= " AND (p.nama_barang LIKE ? OR p.kode_barang LIKE ?)";
+            $like = "%{$search}%";
+            $sql .= " AND (p.nama_barang LIKE ? OR p.kode_barang LIKE ?)";
             $params[] = $like;
             $params[] = $like;
-            $types   .= 'ss';
+            $types .= 'ss';
         }
 
         if ($katId > 0) {
-            $sql     .= " AND p.kategori_id = ?";
+            $sql .= " AND p.kategori_id = ?";
             $params[] = $katId;
-            $types   .= 'i';
+            $types .= 'i';
         }
 
         $sql .= " ORDER BY p.id DESC";
@@ -54,10 +55,11 @@ class ProductController
 
     public function show(): void
     {
-        if (!is_logged_in()) redirect('auth/login');
+        if (!is_logged_in())
+            redirect('auth/login');
 
-        $id   = (int) ($_GET['id'] ?? 0);
-        $db   = getDB();
+        $id = (int) ($_GET['id'] ?? 0);
+        $db = getDB();
 
         $stmt = $db->prepare(
             "SELECT p.*, k.nama_kategori, d.nama_distributor
@@ -70,7 +72,8 @@ class ProductController
         $stmt->execute();
         $product = $stmt->get_result()->fetch_assoc();
 
-        if (!$product) redirect('product/index');
+        if (!$product)
+            redirect('product/index');
 
         $pageTitle = 'Detail Produk';
         require_once __DIR__ . '/../view/produk/show.php';
@@ -78,31 +81,33 @@ class ProductController
 
     public function create(): void
     {
-        if (!is_logged_in()) redirect('auth/login');
+        if (!is_logged_in())
+            redirect('auth/login');
         allow_roles(['owner', 'admin']);
 
-        $db        = getDB();
+        $db = getDB();
         $kategoris = $db->query(
             "SELECT * FROM kategori_product ORDER BY nama_kategori"
         )->fetch_all(MYSQLI_ASSOC);
-        $distribs  = $db->query(
+        $distribs = $db->query(
             "SELECT * FROM distributors ORDER BY nama_distributor"
         )->fetch_all(MYSQLI_ASSOC);
         $error = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $kode        = trim($_POST['kode_barang']   ?? '');
-            $nama        = trim($_POST['nama_barang']   ?? '');
-            $kategori_id = (int)   ($_POST['kategori_id']   ?? 0);
-            $dist_id     = (int)   ($_POST['distributor_id'] ?? 0);
-            $stock       = (int)   ($_POST['stock']          ?? 0);
-            $stock_min   = (int)   ($_POST['stock_min']      ?? 0);
-            $harga_beli  = (float) ($_POST['harga_beli']     ?? 0);
-            $harga_jual  = (float) ($_POST['harga_jual']     ?? 0);
-            $satuan      = trim($_POST['satuan']             ?? '');
-            $deskripsi   = trim($_POST['deskripsi']          ?? '') ?: null;
+            $kode = '';
+            $nama = trim($_POST['nama_barang'] ?? '');
+            $kategori_id = (int) ($_POST['kategori_id'] ?? 0);
+            $kode = $this->generateKodeBarang($db, $kategori_id);
+            $dist_id = !empty($_POST['distributor_id']) ? (int) $_POST['distributor_id'] : null;
+            $stock = (int) ($_POST['stock'] ?? 0);
+            $stock_min = (int) ($_POST['stock_min'] ?? 0);
+            $harga_beli = (float) ($_POST['harga_beli'] ?? 0);
+            $harga_jual = (float) ($_POST['harga_jual'] ?? 0);
+            $satuan = trim($_POST['satuan'] ?? '');
+            $deskripsi = trim($_POST['deskripsi'] ?? '') ?: null;
 
-            if (empty($kode) || empty($nama) || !$kategori_id || !$dist_id || empty($satuan)) {
+            if (empty($nama) || !$kategori_id || empty($satuan)) {
                 $error = 'Semua field wajib diisi.';
             } else {
                 // Upload foto jika ada
@@ -116,7 +121,7 @@ class ProductController
                 }
 
                 if (empty($error)) {
-                    $now  = date('Y-m-d H:i:s');
+                    $now = date('Y-m-d H:i:s');
                     $stmt = $db->prepare(
                         "INSERT INTO product
                             (kode_barang, nama_barang, kategori_id, distributor_id,
@@ -125,9 +130,19 @@ class ProductController
                     );
                     $stmt->bind_param(
                         'ssiiiiddsssss',
-                        $kode, $nama, $kategori_id, $dist_id,
-                        $stock, $stock_min, $harga_beli, $harga_jual,
-                        $satuan, $deskripsi, $foto, $now, $now
+                        $kode,
+                        $nama,
+                        $kategori_id,
+                        $dist_id,
+                        $stock,
+                        $stock_min,
+                        $harga_beli,
+                        $harga_jual,
+                        $satuan,
+                        $deskripsi,
+                        $foto,
+                        $now,
+                        $now
                     );
                     if ($stmt->execute()) {
                         redirect('product/index');
@@ -144,7 +159,8 @@ class ProductController
 
     public function edit(): void
     {
-        if (!is_logged_in()) redirect('auth/login');
+        if (!is_logged_in())
+            redirect('auth/login');
         allow_roles(['owner', 'admin']);
 
         $id = (int) ($_GET['id'] ?? 0);
@@ -155,28 +171,29 @@ class ProductController
         $stmt->execute();
         $product = $stmt->get_result()->fetch_assoc();
 
-        if (!$product) redirect('product/index');
+        if (!$product)
+            redirect('product/index');
 
         $kategoris = $db->query(
             "SELECT * FROM kategori_product ORDER BY nama_kategori"
         )->fetch_all(MYSQLI_ASSOC);
-        $distribs  = $db->query(
+        $distribs = $db->query(
             "SELECT * FROM distributors ORDER BY nama_distributor"
         )->fetch_all(MYSQLI_ASSOC);
         $error = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $kode        = trim($_POST['kode_barang']   ?? '');
-            $nama        = trim($_POST['nama_barang']   ?? '');
-            $kategori_id = (int)   ($_POST['kategori_id']   ?? 0);
-            $dist_id     = (int)   ($_POST['distributor_id'] ?? 0);
-            $stock       = (int)   ($_POST['stock']          ?? 0);
-            $stock_min   = (int)   ($_POST['stock_min']      ?? 0);
-            $harga_beli  = (float) ($_POST['harga_beli']     ?? 0);
-            $harga_jual  = (float) ($_POST['harga_jual']     ?? 0);
-            $satuan      = trim($_POST['satuan']             ?? '');
-            $deskripsi   = trim($_POST['deskripsi']          ?? '') ?: null;
-            $hapusFoto   = isset($_POST['hapus_foto']) && $_POST['hapus_foto'] === '1';
+            $kode = trim($_POST['kode_barang'] ?? '');
+            $nama = trim($_POST['nama_barang'] ?? '');
+            $kategori_id = (int) ($_POST['kategori_id'] ?? 0);
+            $dist_id = !empty($_POST['distributor_id']) ? (int) $_POST['distributor_id'] : null;
+            $stock = (int) ($_POST['stock'] ?? 0);
+            $stock_min = (int) ($_POST['stock_min'] ?? 0);
+            $harga_beli = (float) ($_POST['harga_beli'] ?? 0);
+            $harga_jual = (float) ($_POST['harga_jual'] ?? 0);
+            $satuan = trim($_POST['satuan'] ?? '');
+            $deskripsi = trim($_POST['deskripsi'] ?? '') ?: null;
+            $hapusFoto = isset($_POST['hapus_foto']) && $_POST['hapus_foto'] === '1';
 
             if (empty($kode) || empty($nama) || !$kategori_id || !$dist_id || empty($satuan)) {
                 $error = 'Semua field wajib diisi.';
@@ -187,7 +204,8 @@ class ProductController
 
                 if ($hapusFoto && $fotoLama) {
                     $uploadDir = __DIR__ . '/../uploads/produk/';
-                    if (file_exists($uploadDir . $fotoLama)) @unlink($uploadDir . $fotoLama);
+                    if (file_exists($uploadDir . $fotoLama))
+                        @unlink($uploadDir . $fotoLama);
                     $fotoUpdate = '';
                 }
 
@@ -201,7 +219,7 @@ class ProductController
                 }
 
                 if (empty($error)) {
-                    $now  = date('Y-m-d H:i:s');
+                    $now = date('Y-m-d H:i:s');
 
                     if ($fotoUpdate !== null) {
                         $fotoDb = $fotoUpdate === '' ? null : $fotoUpdate;
@@ -213,10 +231,20 @@ class ProductController
                              WHERE id = ?"
                         );
                         $stmt->bind_param(
-                            'ssiiiiddssssi',
-                            $kode, $nama, $kategori_id, $dist_id,
-                            $stock, $stock_min, $harga_beli, $harga_jual,
-                            $satuan, $deskripsi, $fotoDb, $now, $id
+                            'ssiiiiddsssss',
+                            $kode,
+                            $nama,
+                            $kategori_id,
+                            $dist_id,
+                            $stock,
+                            $stock_min,
+                            $harga_beli,
+                            $harga_jual,
+                            $satuan,
+                            $deskripsi,
+                            $foto,
+                            $now,
+                            $now
                         );
                     } else {
                         // Tidak ada perubahan foto
@@ -228,10 +256,20 @@ class ProductController
                              WHERE id = ?"
                         );
                         $stmt->bind_param(
-                            'ssiiiiddsssi',
-                            $kode, $nama, $kategori_id, $dist_id,
-                            $stock, $stock_min, $harga_beli, $harga_jual,
-                            $satuan, $deskripsi, $now, $id
+                            'ssiiiiddsssss',
+                            $kode,
+                            $nama,
+                            $kategori_id,
+                            $dist_id,
+                            $stock,
+                            $stock_min,
+                            $harga_beli,
+                            $harga_jual,
+                            $satuan,
+                            $deskripsi,
+                            $foto,
+                            $now,
+                            $now
                         );
                     }
 
@@ -250,7 +288,8 @@ class ProductController
 
     public function delete(): void
     {
-        if (!is_logged_in()) redirect('auth/login');
+        if (!is_logged_in())
+            redirect('auth/login');
         allow_roles(['owner', 'admin']);
 
         $id = (int) ($_GET['id'] ?? 0);
@@ -270,7 +309,8 @@ class ProductController
             $row = $stmtFoto->get_result()->fetch_assoc();
             if ($row && $row['foto']) {
                 $fotoPath = __DIR__ . '/../uploads/produk/' . $row['foto'];
-                if (file_exists($fotoPath)) @unlink($fotoPath);
+                if (file_exists($fotoPath))
+                    @unlink($fotoPath);
             }
 
             $stmt = $db->prepare("DELETE FROM product WHERE id = ?");
@@ -281,4 +321,52 @@ class ProductController
 
         redirect('product/index');
     }
+
+    private function generateKodeBarang(mysqli $db, int $kategoriId): string
+{
+    // Ambil nama kategori
+    $stmt = $db->prepare("
+        SELECT nama_kategori
+        FROM kategori_product
+        WHERE id = ?
+    ");
+    $stmt->bind_param('i', $kategoriId);
+    $stmt->execute();
+
+    $kategori = $stmt->get_result()->fetch_assoc();
+
+    if (!$kategori) {
+        return 'PRD1';
+    }
+
+    // Ambil huruf kapital dari setiap kata
+    $kata = explode(' ', trim($kategori['nama_kategori']));
+    $prefix = '';
+
+    foreach ($kata as $k) {
+        $prefix .= strtoupper(substr($k, 0, 1));
+    }
+
+    // Cari kode terakhir dengan prefix yang sama
+    $stmt = $db->prepare("
+        SELECT kode_barang
+        FROM product
+        WHERE kode_barang LIKE CONCAT(?, '%')
+        ORDER BY id DESC
+        LIMIT 1
+    ");
+    $stmt->bind_param('s', $prefix);
+    $stmt->execute();
+
+    $last = $stmt->get_result()->fetch_assoc();
+
+    if ($last) {
+        $angka = (int) preg_replace('/[^0-9]/', '', $last['kode_barang']);
+        $angka++;
+    } else {
+        $angka = 1;
+    }
+
+    return $prefix . $angka;
+}
 }

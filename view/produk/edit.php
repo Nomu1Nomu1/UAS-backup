@@ -58,8 +58,9 @@
                 <label class="form-label fw-semibold small">
                     Distributor <span class="text-danger">*</span>
                 </label>
-                <select name="distributor_id" class="form-select" style="border-radius:12px;" required>
+                <select name="distributor_id" class="form-select" style="border-radius:12px;">
                     <?php foreach ($distribs as $d): ?>
+                        <option value="">Tanpa Distributor</option>
                         <option value="<?= $d['id'] ?>"
                             <?= (($product['distributor_id'] ?? 0) == $d['id']) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($d['nama_distributor']) ?>
