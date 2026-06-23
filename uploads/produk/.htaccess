@@ -1,0 +1,9 @@
+# Izinkan akses ke file gambar saja
+<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+    Require all granted
+</FilesMatch>
+
+# Blokir eksekusi PHP
+<FilesMatch "\.php$">
+    Require all denied
+</FilesMatch>
