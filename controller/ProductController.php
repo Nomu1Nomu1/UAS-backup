@@ -183,9 +183,10 @@ class ProductController
         $error = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $kode = trim($_POST['kode_barang'] ?? '');
+            $kode = '';
             $nama = trim($_POST['nama_barang'] ?? '');
             $kategori_id = (int) ($_POST['kategori_id'] ?? 0);
+            $kode = $this->generateKodeBarang($db, $kategori_id);
             $dist_id = !empty($_POST['distributor_id']) ? (int) $_POST['distributor_id'] : null;
             $stock = (int) ($_POST['stock'] ?? 0);
             $stock_min = (int) ($_POST['stock_min'] ?? 0);
@@ -195,7 +196,7 @@ class ProductController
             $deskripsi = trim($_POST['deskripsi'] ?? '') ?: null;
             $hapusFoto = isset($_POST['hapus_foto']) && $_POST['hapus_foto'] === '1';
 
-            if (empty($kode) || empty($nama) || !$kategori_id || !$dist_id || empty($satuan)) {
+            if (empty($nama) || !$kategori_id || empty($satuan)) {
                 $error = 'Semua field wajib diisi.';
             } else {
                 require_once __DIR__ . '/../model/Product.php';
@@ -250,13 +251,14 @@ class ProductController
                         // Tidak ada perubahan foto
                         $stmt = $db->prepare(
                             "UPDATE product
-                             SET kode_barang = ?, nama_barang = ?, kategori_id = ?, distributor_id = ?,
-                                 stock = ?, stock_min = ?, harga_beli = ?, harga_jual = ?,
-                                 satuan = ?, deskripsi = ?, updatedAt = ?
-                             WHERE id = ?"
+                            SET kode_barang = ?, nama_barang = ?, kategori_id = ?, distributor_id = ?,
+                            stock = ?, stock_min = ?, harga_beli = ?, harga_jual = ?,
+                            satuan = ?, deskripsi = ?, updatedAt = ?
+                            WHERE id = ?"
                         );
+
                         $stmt->bind_param(
-                            'ssiiiiddsssss',
+                            'ssiiiiddsssi',
                             $kode,
                             $nama,
                             $kategori_id,
@@ -267,9 +269,8 @@ class ProductController
                             $harga_jual,
                             $satuan,
                             $deskripsi,
-                            $foto,
                             $now,
-                            $now
+                            $id
                         );
                     }
 
@@ -323,50 +324,50 @@ class ProductController
     }
 
     private function generateKodeBarang(mysqli $db, int $kategoriId): string
-{
-    // Ambil nama kategori
-    $stmt = $db->prepare("
+    {
+        // Ambil nama kategori
+        $stmt = $db->prepare("
         SELECT nama_kategori
         FROM kategori_product
         WHERE id = ?
     ");
-    $stmt->bind_param('i', $kategoriId);
-    $stmt->execute();
+        $stmt->bind_param('i', $kategoriId);
+        $stmt->execute();
 
-    $kategori = $stmt->get_result()->fetch_assoc();
+        $kategori = $stmt->get_result()->fetch_assoc();
 
-    if (!$kategori) {
-        return 'PRD1';
-    }
+        if (!$kategori) {
+            return 'PRD1';
+        }
 
-    // Ambil huruf kapital dari setiap kata
-    $kata = explode(' ', trim($kategori['nama_kategori']));
-    $prefix = '';
+        // Ambil huruf kapital dari setiap kata
+        $kata = explode(' ', trim($kategori['nama_kategori']));
+        $prefix = '';
 
-    foreach ($kata as $k) {
-        $prefix .= strtoupper(substr($k, 0, 1));
-    }
+        foreach ($kata as $k) {
+            $prefix .= strtoupper(substr($k, 0, 1));
+        }
 
-    // Cari kode terakhir dengan prefix yang sama
-    $stmt = $db->prepare("
+        // Cari kode terakhir dengan prefix yang sama
+        $stmt = $db->prepare("
         SELECT kode_barang
         FROM product
         WHERE kode_barang LIKE CONCAT(?, '%')
         ORDER BY id DESC
         LIMIT 1
     ");
-    $stmt->bind_param('s', $prefix);
-    $stmt->execute();
+        $stmt->bind_param('s', $prefix);
+        $stmt->execute();
 
-    $last = $stmt->get_result()->fetch_assoc();
+        $last = $stmt->get_result()->fetch_assoc();
 
-    if ($last) {
-        $angka = (int) preg_replace('/[^0-9]/', '', $last['kode_barang']);
-        $angka++;
-    } else {
-        $angka = 1;
+        if ($last) {
+            $angka = (int) preg_replace('/[^0-9]/', '', $last['kode_barang']);
+            $angka++;
+        } else {
+            $angka = 1;
+        }
+
+        return $prefix . $angka;
     }
-
-    return $prefix . $angka;
-}
 }

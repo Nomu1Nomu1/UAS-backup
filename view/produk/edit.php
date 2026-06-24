@@ -29,7 +29,7 @@
                     Kode Barang <span class="text-danger">*</span>
                 </label>
                 <input type="text" name="kode_barang" class="form-control" style="border-radius:12px;"
-                       value="<?= htmlspecialchars($_POST['kode_barang'] ?? $product['kode_barang']) ?>" required>
+                       value="<?= htmlspecialchars($_POST['kode_barang'] ?? $product['kode_barang']) ?>" disabled>
             </div>
 
             <div class="col-md-8">
@@ -104,7 +104,7 @@
             <div class="col-md-8">
                 <label class="form-label fw-semibold small">Deskripsi</label>
                 <textarea name="deskripsi" rows="3" class="form-control"
-                          style="border-radius:12px;"><?= htmlspecialchars($_POST['deskripsi'] ?? $product['deskripsi']) ?></textarea>
+                          style="border-radius:12px;"><?= htmlspecialchars($_POST['deskripsi'] ?? $product['deskripsi'] ?? '') ?></textarea>
             </div>
 
             <!-- ===== FOTO PRODUK ===== -->
